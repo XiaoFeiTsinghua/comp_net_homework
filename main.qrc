@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/image">
+        <file alias="tray">tray.jpg</file>
+        <file alias="chats_not_chosen">chats_not_chosen.jpg</file>
+        <file alias="chats_chosen">chats_chosen.jpg</file>
+        <file alias="friends_chosen">friends_chosen.jpg</file>
+        <file alias="friends_not_chosen">friends_not_chosec.jpg</file>
+        <file alias="groups_chosen">groups_chosen.jpg</file>
+        <file alias="groups_not_chosen">groups_not_chosen.jpg</file>
+        <file alias="photo_gjq">photo_gjq.jpg</file>
+        <file alias="logo">logo.jpg</file>
+        <file alias="photo">photo.jpg</file>
+        <file alias="close">close.png</file>
+        <file alias="min">min.png</file>
+    </qresource>
+</RCC>
