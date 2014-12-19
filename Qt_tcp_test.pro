@@ -7,6 +7,7 @@
 QT       += core gui
 QT += network widgets
 QT += multimedia multimediawidgets
+QT += sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 

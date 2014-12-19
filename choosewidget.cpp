@@ -43,14 +43,20 @@ void ChooseWidget::double_clicked(QTreeWidgetItem *item, int column)
     {
         ChatDialog* chat = new ChatDialog(f->id);
         chat->show();
-        connect(chat, SIGNAL(send_msg(QString,QString)), this, SLOT(rec_msg(QString, QString)));
+        connect(chat, SIGNAL(send_msg(QString,QString)), this, SLOT(from_down_msg(QString, QString)));
+        connect(this, SIGNAL(to_down_msg(QString,QString)), chat, SLOT(rec_msg(QString,QString)));
         emit(new_conn(f->id, QString(bt)));
     }
 }
 
-void ChooseWidget::rec_msg(QString id, QString msg)
+void ChooseWidget::from_up_msg(QString id, QString msg)
 {
-    emit send_msg(id, msg);
+    emit to_down_msg(id, msg);
+}
+
+void ChooseWidget::from_down_msg(QString id, QString msg)
+{
+    emit to_up_msg(id, msg);
 }
 
 void ChooseWidget::init()
@@ -71,13 +77,17 @@ void ChooseWidget::init()
     str << QObject::tr("需要膜拜的人");
     QTreeWidgetItem *parentitem = new QTreeWidgetItem(friendstree, str);
 
-    for(int i = 0; i < num_of_friends; i++)
+    for(int i = 0; i < num_of_friends-1; i++)
     {
         FriendWidget *f = new FriendWidget("2012011490", QPixmap(":/image/photo_gjq"), "高大神", "I'm doge!", this);
         QTreeWidgetItem *childitem = new QTreeWidgetItem(parentitem);
         childitem->setSizeHint(0, QSize(200, 30));
         friendstree->setItemWidget(childitem, 0, f);
     }
+    FriendWidget *f = new FriendWidget("2012011489", QPixmap(":/image/photo_gjq"), "测试用账号", "I'm bzdy!", this);
+    QTreeWidgetItem *childitem = new QTreeWidgetItem(parentitem);
+    childitem->setSizeHint(0, QSize(200, 30));
+    friendstree->setItemWidget(childitem, 0, f);
 
 }
 
@@ -110,5 +120,5 @@ void ChooseWidget::refresh()
     case 2:
         friendstree->setVisible(false);
     }
-    qDebug()<<choice->checkedId();
+    qDebug()<< "in chooseWidget::refresh() " << choice->checkedId();
 }

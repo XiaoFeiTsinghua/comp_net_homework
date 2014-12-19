@@ -27,6 +27,13 @@ ChatDialog::~ChatDialog()
     delete ui;
 }
 
+void ChatDialog::rec_msg(QString id, QString msg)
+{
+    if ( id == this->id )
+        QMessageBox::information(this, "get msg!", "from" + id + " " + msg);
+    qDebug() << "id" << id << "this->id" << this->id << "msg" << msg;
+}
+
 void ChatDialog::on_fontCbx_currentFontChanged(const QFont &f)
 {
     ui->msgTxtEdit->setCurrentFont(f);

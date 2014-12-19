@@ -9,6 +9,9 @@ int main(int argc, char *argv[])
     LoginDialog l;
     if(l.exec()==QDialog::Accepted)
     {
+        QString name = l.getUsername();
+        w.setUsername(name);
+        w.init();
         w.show();
         return a.exec();
     }

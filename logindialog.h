@@ -19,6 +19,8 @@
 #include <QMouseEvent>
 #include <QPixmap>
 #include <QIcon>
+#include <QtCore/QCoreApplication>
+#include <QtSql>
 
 class LoginDialog : public QDialog
 {
@@ -26,6 +28,8 @@ class LoginDialog : public QDialog
 public:
     explicit LoginDialog(QDialog *parent = 0);
     void init_userCombo(QString filename);
+    QString getUsername();
+
 private:
     QLabel *logoLabel, *photoLabel;
     QCheckBox *autologCheck, *rememberCheck;
@@ -34,6 +38,8 @@ private:
     QPushButton *loginButton, *exitButton;
     QPoint dPos;
     bool ismousepressed;
+
+    QString username;
 
     QTcpSocket *log;
     void con();

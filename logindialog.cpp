@@ -20,10 +20,16 @@ LoginDialog::LoginDialog(QDialog *parent) :
     exitButton->setMouseTracking(true);
     beautify();
     //初始化输入框内容
-    init_userCombo("username.txt");
+    init_userCombo("localinfo.db");
     //建立TCPSocket对象
     log = new QTcpSocket(this);
     con();
+    ismousepressed = false;
+}
+
+QString LoginDialog::getUsername()
+{
+    return username;
 }
 
 
@@ -101,11 +107,32 @@ void LoginDialog::on_loginButton_clicked()
         QMessageBox::information(this, tr("登录信息"),tr("失败！"));
         qDebug() << "false";
     }
+    username = userCombo->currentText();
 
 }
 
 void LoginDialog::init_userCombo(QString filename)
 {
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName(filename);
+    if(!db.open())
+    {
+        qDebug()<<"fail to open database";
+    }
+    QSqlQuery query;//以下执行相关QSL语句
+    query.exec("create table localuser(id varchar, username varchar)");    //新建student表，id设置为主键，还有一个name项
+    //query.exec(QObject::tr("insert into localuser values(1,'2012010526')"));
+
+    query.exec("select id, username from localuser where id >= 1");
+    while(query.next())//query.next()指向查找到的第一条记录，然后每次后移一条记录
+    {
+        int ele0=query.value(0).toInt();//query.value(0)是id的值，将其转换为int型
+        QString ele1=query.value(1).toString();
+        userCombo->addItem(ele1);
+        qDebug()<<ele0<<ele1;//输出两个值
+    }
+    query.exec(QObject::tr("drop student"));
+    /*
     QFile user_file(filename);
     if(!user_file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
@@ -124,6 +151,7 @@ void LoginDialog::init_userCombo(QString filename)
 
         user_file.close();
     }
+    */
 }
 
 void LoginDialog::on_exitButton_clicked()

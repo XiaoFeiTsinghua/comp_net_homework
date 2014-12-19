@@ -31,11 +31,14 @@ private:
     int num_of_friends = 6;
 signals:
     void new_conn(QString id, QString ip);
-    void send_msg(QString id, QString msg);
+    void to_up_msg(QString id, QString msg);
+    void to_down_msg(QString id, QString msg);
 
 public slots:
     void double_clicked(QTreeWidgetItem* item, int column);
-    void rec_msg(QString id, QString msg);
+    void from_down_msg(QString id, QString msg);
+
+    void from_up_msg(QString id, QString msg);
 };
 
 #endif // CHOOSEWIDGET_H

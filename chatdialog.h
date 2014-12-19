@@ -27,6 +27,8 @@ private slots:
 
     void on_sendBtn_clicked();
 
+    void rec_msg(QString id, QString msg);
+
 signals:
     void send_msg(QString id, QString msg);
 

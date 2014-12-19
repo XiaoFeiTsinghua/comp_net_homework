@@ -25,6 +25,8 @@ class Widget : public QWidget
 
 public:
     explicit Widget(QWidget *parent = 0);
+    void setUsername(QString name);
+    void init();
     ~Widget();
 
 private slots:
@@ -34,6 +36,9 @@ private slots:
     void new_conn(QString id, QString ip);
     void send_msg(QString id, QString msg);
 
+signals:
+    void rec_msg(QString id, QString msg);
+
 private:
     Ui::Widget *ui;
     QSystemTrayIcon *trayIcon;
@@ -41,6 +46,7 @@ private:
     QTreeWidget *tree;
     ChooseWidget *choosew;
     void createTray();
+    QString username;
 
     QTcpServer* chat_server;
     QMap<QString, QTcpSocket*> socket_map;

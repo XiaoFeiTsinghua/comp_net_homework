@@ -35,9 +35,25 @@ Widget::Widget(QWidget *parent) :
     chat_server = new QTcpServer(this);
     chat_server->listen(QHostAddress::Any, 55554);
     connect(chat_server, SIGNAL(newConnection()), this, SLOT(receive_connection()));
-    connect(choosew, SIGNAL(send_msg(QString,QString)), this, SLOT(send_msg(QString, QString)));
+    connect(choosew, SIGNAL(to_up_msg(QString,QString)), this, SLOT(send_msg(QString, QString)));
     connect(choosew, SIGNAL(new_conn(QString, QString)), this, SLOT(new_conn(QString, QString)));
+    connect(this, SIGNAL(rec_msg(QString,QString)), choosew, SLOT(from_up_msg(QString,QString)));
 }
+
+void Widget::setUsername(QString name)
+{
+    username = name;
+    qDebug() << "username: " << username;
+}
+
+
+void Widget::init()
+{
+    this->resize(275, 600);
+    //choosew->setUsername(this->username);
+    //choosew->init();
+}
+
 
 Widget::~Widget()
 {
@@ -67,7 +83,11 @@ void Widget::send_msg(QString id, QString msg)
         out.device()->seek(0);
         out << (qint16)1 << (qint16)(block.size() - sizeof(qint32));
         QMap<QString, QTcpSocket*>::iterator it = socket_map.find(id);
+        QString tmp;
+        tmp = block;
         it.value()->write(block);
+        qDebug() << "in Widget::send_msg, sending msg to id, the socket is:" << it.value();
+        qDebug() << "what i send is" << msg << "to" << id;
     }
     else
     {
@@ -84,9 +104,9 @@ void Widget::new_conn(QString id, QString ip)
         QByteArray block;
         QDataStream out(&block, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_5_3);
-        out << id;
+        out << username;
         new_sock->write(block);
-        qDebug() << "new_conn" << block;
+        qDebug() << "new_conn_sending" << username << "ip:" << ip;
         if (!new_sock->waitForReadyRead(300))
         {
 
@@ -104,10 +124,9 @@ void Widget::new_conn(QString id, QString ip)
         }
         else
         {
-                socket_map.insert(id, new_sock);
-                QMap<QString, QTcpSocket*>::iterator it = socket_map.find(id);
-                connect(it.value(), SIGNAL(readyRead()), this, SLOT(read_tcp()));
-
+            socket_map.insert(id, new_sock);
+            QMap<QString, QTcpSocket*>::iterator it = socket_map.find(id);
+            connect(it.value(), SIGNAL(readyRead()), this, SLOT(read_tcp()));
             new_sock = NULL;
         }
     }
@@ -138,7 +157,7 @@ void Widget::wait_for_id()
             out << "configure failed, going to close this session.";
             out.device()->seek(0);
             out << (qint16)-1 << (qint16)(block.size() - sizeof(qint32));
-            qDebug() << "out-1";
+            qDebug() << "out-1" << " " << id;
             waiting_soc->write(block);
             waiting_soc->disconnectFromHost();
             disconnect(waiting_soc, SIGNAL(readyRead()), this, SLOT(wait_for_id()));
@@ -146,10 +165,10 @@ void Widget::wait_for_id()
         }
         else
         {
-            out << (qint32)0;
-            out << "configure success, going to keep this session.";
-            out.device()->seek(0);
-            out << (qint16)0 << (qint16)(block.size() - sizeof(qint32));
+//            out << (qint32)0;
+//            out << "configure success, going to keep this session.";
+//            out.device()->seek(0);
+//            out << (qint16)0 << (qint16)(block.size() - sizeof(qint32));
             qDebug() << "out0";
             waiting_soc->write(block);
             socket_map.insert(id, waiting_soc);
@@ -169,16 +188,33 @@ void Widget::read_tcp()
     in.setVersion(QDataStream::Qt_5_3);
     qint16 type;
     in >> type;
-    qDebug() << type;
+    qDebug() << "Widget::read_tcp()::type" << type << "socket: " << socket;
     qint16 blocksize;
+    in >> blocksize;
+    QString text;
+    in >> text;
     if (type == (qint16)1)
     {
+        QString id;
+        QMap<QString, QTcpSocket*>::iterator it;
+        for ( it = socket_map.begin(); it!= socket_map.end(); it++ )
+        {
+            if ( it.value() != socket )
+                continue;
+            else
+            {
+                id = it.key();
+                break;
+            }
+        }
         qDebug() << "reading text!in widget::read_tcp()";
-        in >> blocksize;
         if (socket->bytesAvailable() < blocksize)
             return;
-        QString text;
-        in >> text;
         QMessageBox::information(this, "good!", text);
+        emit rec_msg(id, text);
+    }
+    else
+    {
+        QMessageBox::warning(this, "not good!", "type" + QString(type) + "blocksize:"+QString(blocksize)+ "text:"+text);
     }
 }
