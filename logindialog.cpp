@@ -11,16 +11,28 @@ LoginDialog::LoginDialog(QDialog *parent) :
     keyEdit = new QLineEdit(this);
     loginButton = new QPushButton(this);
     exitButton = new QPushButton(this);
+    minButton = new QPushButton(this);
 
     connect(loginButton, &QPushButton::clicked, this, &LoginDialog::on_loginButton_clicked);
-    connect(exitButton, &QPushButton::clicked, this, &LoginDialog::on_exitButton_clicked);
+    connect(exitButton, &QPushButton::clicked, this, &LoginDialog::close);
+    connect(minButton, &QPushButton::clicked, this, &LoginDialog::showMinimized);
 
     this->setMouseTracking(true);
     logoLabel->setMouseTracking(true);
     exitButton->setMouseTracking(true);
     beautify();
+    //判断数据库是否存在
+    QDir *temp = new QDir;
+    bool exist = temp->exists("history.db");
+
+    if(exist)
+        qDebug() << "exist";
+    else
+        newHistroy();
+
     //初始化输入框内容
-    init_userCombo("localinfo.db");
+    init_userCombo();
+    init_keyEdit();
     //建立TCPSocket对象
     log = new QTcpSocket(this);
     con();
@@ -36,11 +48,22 @@ QString LoginDialog::getUsername()
 //美化界面
 void LoginDialog::beautify()
 {
+    //圆角
+    setWindowFlags(Qt::FramelessWindowHint);
+    QBitmap bmp(this->size());
+    bmp.fill();
+    QPainter p(&bmp);
+    p.setPen(Qt::NoPen);
+    p.setBrush(Qt::black);
+    p.drawRoundedRect(bmp.rect(), 3, 3);
+    setMask(bmp);//设置窗体遮罩
+
     //装饰，无边框
     this->setWindowFlags(Qt::FramelessWindowHint);
     this->resize(400,300);
+
     logoLabel->resize(400,190);
-    logoLabel->move(0, -10);
+    logoLabel->move(0, -18);
     logoLabel->setPixmap(QPixmap(":/image/logo"));
 
     photoLabel->resize(50,50);
@@ -70,10 +93,12 @@ void LoginDialog::beautify()
     exitButton->resize(20, 20);
     exitButton->move(380, 0);
     exitButton->setIcon(QIcon(":/image/close"));
-    exitButton->setFlat(true);
+    exitButton->setStyleSheet("border:none; background-color:transparent;");
 
-
-    exitButton->setStyleSheet("QPushButton{background:red}");
+    minButton->resize(20, 20);
+    minButton->move(360, 0);
+    minButton->setIcon(QIcon(":/image/min"));
+    minButton->setStyleSheet("border:none; background-color:transparent;");
 }
 
 void LoginDialog::on_loginButton_clicked()
@@ -108,55 +133,29 @@ void LoginDialog::on_loginButton_clicked()
         qDebug() << "false";
     }
     username = userCombo->currentText();
+    int flag = rememberCheck->isChecked();
+    //qDebug()<<"check"<<flag;
+    setRemember(flag);
+    addUser(username);
+}
+
+void LoginDialog::init_userCombo()
+{
 
 }
 
-void LoginDialog::init_userCombo(QString filename)
+void LoginDialog::init_keyEdit()
 {
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName(filename);
-    if(!db.open())
+    int flag = getRemember();
+    if(flag == 1)//上次勾选了"记住密码"
     {
-        qDebug()<<"fail to open database";
-    }
-    QSqlQuery query;//以下执行相关QSL语句
-    query.exec("create table localuser(id varchar, username varchar)");    //新建student表，id设置为主键，还有一个name项
-    //query.exec(QObject::tr("insert into localuser values(1,'2012010526')"));
-
-    query.exec("select id, username from localuser where id >= 1");
-    while(query.next())//query.next()指向查找到的第一条记录，然后每次后移一条记录
-    {
-        int ele0=query.value(0).toInt();//query.value(0)是id的值，将其转换为int型
-        QString ele1=query.value(1).toString();
-        userCombo->addItem(ele1);
-        qDebug()<<ele0<<ele1;//输出两个值
-    }
-    query.exec(QObject::tr("drop student"));
-    /*
-    QFile user_file(filename);
-    if(!user_file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        qDebug() << "Open failed." << endl;
+        rememberCheck->setChecked(true);
+        keyEdit->setText("net2014");
     }
     else
     {
-        QTextStream txtInput(&user_file);
-        QString lineStr;
-        while(!txtInput.atEnd())
-        {
-            lineStr = txtInput.readLine();
-            userCombo->addItem(lineStr);
-            qDebug() << lineStr << endl;
-        }
-
-        user_file.close();
+        rememberCheck->setChecked(false);
     }
-    */
-}
-
-void LoginDialog::on_exitButton_clicked()
-{
-    exit(0);
 }
 
 void LoginDialog::con()
@@ -173,27 +172,24 @@ void LoginDialog::con()
 void LoginDialog::mouseMoveEvent(QMouseEvent *e)
 {
     if(inButton(exitButton, e->pos()))
-        exitButton->setFlat(false);
+        exitButton->setStyleSheet("border:none; background-color: rgb(255, 0, 0);");
     else
-    {
-        //qDebug()<<"1";
-        exitButton->setFlat(true);
-    }
-    if (ismousepressed)
-        this->move(e->globalPos() - dPos);
+        exitButton->setStyleSheet("border:none; background-color:transparent;");
+
+    if(inButton(minButton, e->pos()))
+        minButton->setStyleSheet("border:none; background-color: rgba(255, 0, 0, 100);");
+    else
+        minButton->setStyleSheet("border:none; background-color:transparent;");
+
+
+    if (e->buttons() == Qt::LeftButton)
+           move(e->globalPos() - dPos);
 }
 
-void LoginDialog::mousePressEvent(QMouseEvent *e)
+void LoginDialog::mousePressEvent(QMouseEvent *mouseEvent)
 {
-    QPoint windowPos = this->pos();
-    QPoint mousePos = e->globalPos();
-    dPos = mousePos - windowPos;
-    ismousepressed = true;
-}
-
-void LoginDialog::mouseReleaseEvent(QMouseEvent *e)
-{
-    ismousepressed = false;
+    if (mouseEvent->buttons() == Qt::LeftButton)
+           dPos = mouseEvent->pos();
 }
 
 
@@ -210,4 +206,5 @@ bool LoginDialog::inButton(QPushButton *push, QPoint p)
     else
         return false;
 }
+
 

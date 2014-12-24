@@ -12,11 +12,17 @@ class FriendWidget : public QWidget
     Q_OBJECT
 public:
     explicit FriendWidget(QWidget *parent = 0);
-    FriendWidget(QString id, QPixmap p, QString n, QString s, QWidget *parent = 0);
-    void init(QPixmap p, QString n, QString s);
+    FriendWidget(int id, int bt, QString num, QPixmap p, QString n, QString s, QWidget *parent = 0);
+    void init();
+    void choose();
+    void cancel_choose();
 
-    QString id;
-
+    int id;
+    int belongto;
+    QString studentnum;
+    QPixmap photopix;
+    QString namestr;
+    QString signstr;
 signals:
 
 public slots:

@@ -11,9 +11,16 @@
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QVector>
-#include "choosewidget.h"
+#include <QDir>
 #include <QtNetwork>
 #include <QMap>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QBitmap>
+#include <QPoint>
+#include "choosewidget.h"
+#include "database.h"
+#include "functionwidget.h"
 
 namespace Ui {
 class Widget;
@@ -25,6 +32,7 @@ class Widget : public QWidget
 
 public:
     explicit Widget(QWidget *parent = 0);
+    Widget(QString name, QWidget *parent = 0);
     void setUsername(QString name);
     void init();
     ~Widget();
@@ -45,12 +53,19 @@ private:
     QListWidget *list;
     QTreeWidget *tree;
     ChooseWidget *choosew;
+    FunctionWidget *functionw;
     void createTray();
+    void mouseMoveEvent(QMouseEvent *e);
+    void mousePressEvent(QMouseEvent *mouseEvent);
+    bool inButton(QPushButton *push, QPoint p);
     QString username;
+    QPushButton *exitButton, *minButton;
 
     QTcpServer* chat_server;
     QMap<QString, QTcpSocket*> socket_map;
     QTcpSocket* waiting_soc;
+
+    QPoint pPos;
 };
 
 #endif // WIDGET_H

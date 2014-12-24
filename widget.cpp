@@ -11,26 +11,9 @@ Widget::Widget(QWidget *parent) :
     ui->setupUi(this);
     this->resize(275, 600);
     choosew = new ChooseWidget(this);
-    //HeadButton *h = new HeadButton(this);
-    /*
-    list = new QListWidget(this);
-    list->resize(200, 600);
-    FriendWidget *f = new FriendWidget();
-    QListWidgetItem *i = new QListWidgetItem();
-    i->setSizeHint(QSize(200, 50));
-    list->addItem(i);
-    list->setItemWidget(i, f);
-
-    tree = new QTreeWidget(this);
-    tree->resize(275, 600);
-    tree->move(200, 0);
-    QStringList str;
-    str << QObject::tr("张三");
-    QTreeWidgetItem *treeitem = new QTreeWidgetItem(tree, str);
-    QTreeWidgetItem *child1 = new QTreeWidgetItem(treeitem, str);
-    treeitem->addChild(child1);
-    */
-    createTray();
+    functionw = new FunctionWidget(username, this);
+    exitButton = new QPushButton(this);
+    minButton = new QPushButton(this);
 
     chat_server = new QTcpServer(this);
     chat_server->listen(QHostAddress::Any, 55554);
@@ -38,20 +21,89 @@ Widget::Widget(QWidget *parent) :
     connect(choosew, SIGNAL(to_up_msg(QString,QString)), this, SLOT(send_msg(QString, QString)));
     connect(choosew, SIGNAL(new_conn(QString, QString)), this, SLOT(new_conn(QString, QString)));
     connect(this, SIGNAL(rec_msg(QString,QString)), choosew, SLOT(from_up_msg(QString,QString)));
+    connect(functionw, &FunctionWidget::added, choosew, &ChooseWidget::refresh_friends);
 }
 
+Widget::Widget(QString name, QWidget *parent) :
+    QWidget(parent),
+    ui(new Ui::Widget)
+{
+    username = name;
+    ui->setupUi(this);
+    this->resize(275, 600);
+    //判断该用户是否曾在本机登录，如果没有，创建文件夹以保存其信息
+    QDir *temp = new QDir;
+    bool exist = temp->exists(username);
+
+    if(exist)
+        qDebug() << "exist";
+    else
+        newFolder(username);
+
+    //构建好友列表
+    choosew = new ChooseWidget(username, this);
+
+    //构建功能菜单
+    functionw = new FunctionWidget(username, this);
+
+    exitButton = new QPushButton(this);
+    minButton = new QPushButton(this);
+    //托盘
+    createTray();
+    //圆角
+    setWindowFlags(Qt::FramelessWindowHint);
+    QBitmap bmp(this->size());
+    bmp.fill();
+    QPainter p(&bmp);
+    p.setPen(Qt::NoPen);
+    p.setBrush(Qt::black);
+    p.drawRoundedRect(bmp.rect(), 3, 3);
+    setMask(bmp);//设置窗体遮罩
+
+    chat_server = new QTcpServer(this);
+    chat_server->listen(QHostAddress::Any, 55554);
+    connect(chat_server, SIGNAL(newConnection()), this, SLOT(receive_connection()));
+    connect(choosew, SIGNAL(to_up_msg(QString,QString)), this, SLOT(send_msg(QString, QString)));
+    connect(choosew, SIGNAL(new_conn(QString, QString)), this, SLOT(new_conn(QString, QString)));
+    connect(this, SIGNAL(rec_msg(QString,QString)), choosew, SLOT(from_up_msg(QString,QString)));
+    connect(exitButton, &QPushButton::clicked, this, &Widget::close);
+    connect(functionw, &FunctionWidget::added, choosew, &ChooseWidget::refresh_friends);
+
+    this->setMouseTracking(true);
+    exitButton->setMouseTracking(true);
+    minButton->setMouseTracking(true);
+
+    init();
+}
+
+//设置用户（用于切换账号，功能还未实现）
 void Widget::setUsername(QString name)
 {
     username = name;
-    qDebug() << "username: " << username;
 }
 
 
 void Widget::init()
 {
     this->resize(275, 600);
-    //choosew->setUsername(this->username);
-    //choosew->init();
+    this->setWindowFlags(Qt::FramelessWindowHint);
+    choosew->resize(275, 500);
+    choosew->move(0, 50);
+
+    functionw->resize(275, 50);
+    functionw->move(0, 550);
+
+    exitButton->resize(20, 20);
+    exitButton->move(255, 0);
+    exitButton->setIcon(QIcon(":/image/close"));
+    exitButton->setStyleSheet("border:none; background-color:transparent;");
+
+    minButton->resize(20, 20);
+    minButton->move(235, 0);
+    minButton->setIcon(QIcon(":/image/min"));
+    minButton->setStyleSheet("border:none; background-color:transparent;");
+    //deleteFriend(username, 5);
+    //deleteGroup(username, 3);
 }
 
 
@@ -65,8 +117,8 @@ void Widget::createTray()
     trayIcon = new QSystemTrayIcon(this);
     trayIcon->setIcon(QIcon(":/image/tray"));
     trayIcon->setToolTip(tr("qq"));
-    QString titlec=tr("子曰USay");
-    QString textc=tr("子曰USay：给你神一般的体验");
+    QString titlec=tr("qq");
+    QString textc=tr("不想写……");
     trayIcon->show();
     trayIcon->showMessage(titlec,textc,QSystemTrayIcon::Information,5000);
 }
@@ -124,9 +176,10 @@ void Widget::new_conn(QString id, QString ip)
         }
         else
         {
-            socket_map.insert(id, new_sock);
-            QMap<QString, QTcpSocket*>::iterator it = socket_map.find(id);
-            connect(it.value(), SIGNAL(readyRead()), this, SLOT(read_tcp()));
+                socket_map.insert(id, new_sock);
+                QMap<QString, QTcpSocket*>::iterator it = socket_map.find(id);
+                connect(it.value(), SIGNAL(readyRead()), this, SLOT(read_tcp()));
+
             new_sock = NULL;
         }
     }
@@ -218,3 +271,41 @@ void Widget::read_tcp()
         QMessageBox::warning(this, "not good!", "type" + QString(type) + "blocksize:"+QString(blocksize)+ "text:"+text);
     }
 }
+
+void Widget::mouseMoveEvent(QMouseEvent *e)
+{
+    if(inButton(exitButton, e->pos()))
+        exitButton->setStyleSheet("border:none; background-color: rgb(255, 0, 4);");
+    else
+        exitButton->setStyleSheet("border:none; background-color:transparent;");
+
+    if(inButton(minButton, e->pos()))
+        minButton->setStyleSheet("border:none; background-color: rgba(255, 0, 0, 100);");
+    else
+        minButton->setStyleSheet("border:none; background-color:transparent;");
+
+
+    if (e->buttons() == Qt::LeftButton)
+           move(e->globalPos() - pPos);
+}
+
+bool Widget::inButton(QPushButton *push, QPoint p)
+{
+    int height = push->height();
+    int width = push->width();
+    QPoint left_up = push->pos();
+    QPoint right_down;
+    right_down.setX(push->pos().x() + width);
+    right_down.setY(push->pos().y() + height);
+    if((p.x() >= left_up.x()) && (p.x() <= right_down.x()) && (p.y() >= left_up.y()) && (p.y() <= right_down.y()))
+        return true;
+    else
+        return false;
+}
+
+void Widget::mousePressEvent(QMouseEvent *mouseEvent)
+{
+    if (mouseEvent->buttons() == Qt::LeftButton)
+           pPos = mouseEvent->pos();
+}
+

@@ -16,37 +16,40 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
-    file_server.cpp \
-    file_client.cpp \
     interface.cpp \
-    online_video.cpp \
     MatToQImage.cpp \
     choosewidget.cpp \
     friendlistwidget.cpp \
     friendwidget.cpp \
     headbutton.cpp \
     logindialog.cpp \
-    user.cpp \
     widget.cpp \
     chatdialog.cpp \
-    textedit_new.cpp
+    textedit_new.cpp \
+    addfriendwidget.cpp \
+    addgroupwidget.cpp \
+    database.cpp \
+    functionwidget.cpp \
+    groupwidget.cpp \
+    mtextedit.cpp
 
-HEADERS  += mainwindow.h \
-    file_server.h \
-    file_client.h \
+HEADERS  += \
     interface.h \
-    online_video.h \
     MatToQImage.h \
     choosewidget.h \
     friendlistwidget.h \
     friendwidget.h \
     headbutton.h \
     logindialog.h \
-    user.h \
     widget.h \
     chatdialog.h \
-    textedit_new.h
+    textedit_new.h \
+    addfriendwidget.h \
+    addgroupwidget.h \
+    database.h \
+    functionwidget.h \
+    groupwidget.h \
+    mtextedit.h
 
 FORMS    += mainwindow.ui \
     file_server.ui \

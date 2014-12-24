@@ -21,21 +21,28 @@
 #include <QIcon>
 #include <QtCore/QCoreApplication>
 #include <QtSql>
+#include <QPainter>
+#include <QBitmap>
+#include <QAxWidget>
+#include <QtGui>
+#include "database.h"
 
 class LoginDialog : public QDialog
 {
     Q_OBJECT
 public:
     explicit LoginDialog(QDialog *parent = 0);
-    void init_userCombo(QString filename);
+    void init_userCombo();
+    void init_keyEdit();
     QString getUsername();
 
 private:
+    //QAxWidget *flash;
     QLabel *logoLabel, *photoLabel;
     QCheckBox *autologCheck, *rememberCheck;
     QComboBox *userCombo;
     QLineEdit *keyEdit;
-    QPushButton *loginButton, *exitButton;
+    QPushButton *loginButton, *exitButton, *minButton;
     QPoint dPos;
     bool ismousepressed;
 
@@ -46,10 +53,9 @@ private:
     void beautify();
     void mouseMoveEvent(QMouseEvent *e);
     void mousePressEvent(QMouseEvent *e);
-    void mouseReleaseEvent(QMouseEvent *e);
     bool inButton(QPushButton *push, QPoint p);
     void on_loginButton_clicked();
-    void on_exitButton_clicked();
+
 signals:
 
 public slots:
