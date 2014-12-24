@@ -60,11 +60,11 @@ FORMS    += mainwindow.ui \
     server.ui \
     chatdialog.ui
 
-INCLUDEPATH += D:\software\OpenCV\bin32\install\include \
-                D:\software\OpenCV\bin32\install\include\opencv \
-                D:\software\OpenCV\bin32\install\include\opencv2
+INCLUDEPATH += C:\opencv\bin\install\include \
+                C:\opencv\bin\install\include\opencv \
+                C:\opencv\bin\install\include\opencv2
 
-LIBS += -L"D:\software\OpenCV\bin32\install\x64\mingw\bin"
+LIBS += -L"C:\opencv\bin\install\x64\mingw\bin"
 LIBS += -lopencv_core249 -lopencv_highgui249 -lopencv_imgproc249
 
 RESOURCES += \
